@@ -77,7 +77,7 @@
         </div>
         ${open && busy != null ? `<div class="bar"><span style="width:${busy}%;background:${color(busy)}"></span></div>` : ''}
         ${open && sessions.length ? `<ul>${sessions.map(([s, e, n]) => `<li>🧗 ${s}–${e} ${esc(n)}</li>`).join('')}</ul>` : ''}
-        <div class="links"><a href="${gym.timetable}" target="_blank" rel="noopener">Órarend</a><a href="${gym.maps}" target="_blank" rel="noopener">Térkép</a></div>
+        <div class="links">${gym.timetable ? `<a href="${gym.timetable}" target="_blank" rel="noopener">Órarend</a>` : ""}<a href="${gym.maps}" target="_blank" rel="noopener">Térkép</a></div>
       </li>`).join('');
   }
 
