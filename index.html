@@ -43,7 +43,7 @@
 <script src="data.js"></script>
 <script src="rank.js"></script>
 <script>
-  const DAYS = ['Vasárnap', 'Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat'];
+  const DAYS = ['Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat', 'Vasárnap'];
   const pad = (h) => String(h).padStart(2, '0') + ':00';
   const opens = DATA.gyms.flatMap((g) => g.open);
   const minH = Math.min(...opens.map(([o]) => +o.slice(0, 2)));
@@ -51,11 +51,11 @@
   const daySel = document.getElementById('day');
   const hourSel = document.getElementById('hour');
 
-  [1, 2, 3, 4, 5, 6, 0].forEach((d) => daySel.add(new Option(DAYS[d], d)));
+  DAYS.forEach((name, d) => daySel.add(new Option(name, d)));
   for (let h = minH; h <= maxH; h++) hourSel.add(new Option(`${pad(h)}–${pad(h + 1)}`, h));
 
   const next = new Date(Date.now() + 3600e3);
-  let day = next.getDay(), hour = next.getHours();
+  let day = (next.getDay() + 6) % 7, hour = next.getHours();
   if (hour > maxH) { day = (day + 1) % 7; hour = minH; }
   daySel.value = day;
   hourSel.value = Math.max(hour, minH);

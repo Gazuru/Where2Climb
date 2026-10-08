@@ -33,4 +33,6 @@ test('real data is well-formed', () => {
     assert.strictEqual(g.sessions.length, 7);
     g.busy.forEach((row) => assert.strictEqual(row.length, 24));
   }
+  const fless = DATA.gyms.find((g) => g.name === 'fless! Buda');
+  assert.deepStrictEqual(fless.open[3], ['14:00', '22:00'], 'Monday first: index 3 is Thursday');
 });

@@ -1,9 +1,9 @@
 // Run in the console of a Google Maps place page opened with ?hl=en while logged in.
-// Returns 7 rows (Sunday first, like Date.getDay()) of 24 hourly busy %, null = no data.
+// Returns 7 rows (Monday first) of 24 hourly busy %, null = no data.
 (() => {
   const isBar = (e) => /% busy at|usually \d+% busy/i.test(e.getAttribute('aria-label') || '');
   const groups = [...new Set([...document.querySelectorAll('[aria-label]')].filter(isBar).map((e) => e.parentElement))];
-  return groups.map((g) => {
+  const rows = groups.map((g) => {
     const row = Array(24).fill(null);
     let hour = -1;
     for (const el of [...g.children].filter(isBar)) {
@@ -15,4 +15,5 @@
     }
     return row;
   });
+  return [...rows.slice(1), rows[0]];
 })();
