@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where2Climb</title>
+<style>
+  :root { --bg: #f6f5f2; --card: #fff; --text: #1d1d1b; --muted: #6b6b66; --line: #e3e1db; --low: #2e9e5b; --mid: #e0a020; --high: #d1453b; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #161615; --card: #222220; --text: #ecebe6; --muted: #9a9993; --line: #34332f; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.4 system-ui, sans-serif; }
+  main { max-width: 32rem; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+  h1 { margin: 0 0 1rem; font-size: 1.6rem; }
+  form { display: flex; gap: .5rem; margin-bottom: .5rem; }
+  select { flex: 1; font: inherit; padding: .6rem; border: 1px solid var(--line); border-radius: .5rem; background: var(--card); color: inherit; }
+  .note { color: var(--muted); font-size: .85rem; margin: 0 0 1rem; }
+  .stale { color: var(--high); font-weight: 600; }
+  ol { list-style: none; padding: 0; margin: 0; display: grid; gap: .75rem; }
+  #list > li { background: var(--card); border: 1px solid var(--line); border-radius: .75rem; padding: 1rem; }
+  #list > li.closed { opacity: .55; }
+  .head { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem; }
+  .name { font-weight: 600; font-size: 1.1rem; }
+  .pct { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .bar { height: .5rem; background: var(--line); border-radius: 1rem; margin: .5rem 0; overflow: hidden; }
+  .bar span { display: block; height: 100%; border-radius: 1rem; }
+  ul { list-style: none; margin: .5rem 0 0; padding: 0; font-size: .9rem; }
+  .links { font-size: .85rem; margin-top: .5rem; }
+  .links a { color: var(--muted); margin-right: 1rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Where2Climb</h1>
+  <form>
+    <select id="day" aria-label="Nap"></select>
+    <select id="hour" aria-label="Időpont"></select>
+  </form>
+  <p class="note">% = a terem saját csúcsidejéhez képest (Google Népszerű időszakok). <span id="checked"></span></p>
+  <ol id="list"></ol>
+</main>
+<script src="data.js"></script>
+<script src="rank.js"></script>
+<script>
+  const DAYS = ['Vasárnap', 'Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat'];
+  const pad = (h) => String(h).padStart(2, '0') + ':00';
+  const opens = DATA.gyms.flatMap((g) => g.open);
+  const minH = Math.min(...opens.map(([o]) => +o.slice(0, 2)));
+  const maxH = Math.max(...opens.map(([, c]) => Math.ceil(+c.slice(0, 2) + +c.slice(3) / 60))) - 1;
+  const daySel = document.getElementById('day');
+  const hourSel = document.getElementById('hour');
+
+  [1, 2, 3, 4, 5, 6, 0].forEach((d) => daySel.add(new Option(DAYS[d], d)));
+  for (let h = minH; h <= maxH; h++) hourSel.add(new Option(`${pad(h)}–${pad(h + 1)}`, h));
+
+  const next = new Date(Date.now() + 3600e3);
+  let day = next.getDay(), hour = next.getHours();
+  if (hour > maxH) { day = (day + 1) % 7; hour = minH; }
+  daySel.value = day;
+  hourSel.value = Math.max(hour, minH);
+
+  const ageDays = (Date.now() - new Date(DATA.checked)) / 864e5;
+  const checked = document.getElementById('checked');
+  checked.textContent = `Adatok frissítve: ${DATA.checked}`;
+  if (ageDays > 35) { checked.className = 'stale'; checked.textContent += ' – frissíteni kell!'; }
+
+  const esc = (s) => s.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
+  const color = (p) => (p < 40 ? 'var(--low)' : p < 70 ? 'var(--mid)' : 'var(--high)');
+
+  function render() {
+    document.getElementById('list').innerHTML = rank(DATA, +daySel.value, +hourSel.value).map(({ gym, open, busy, sessions }) => `
+      <li class="${open ? '' : 'closed'}">
+        <div class="head">
+          <span class="name">${esc(gym.name)}</span>
+          <span class="pct">${!open ? 'zárva' : busy == null ? 'nincs adat' : busy + '%'}</span>
+        </div>
+        ${open && busy != null ? `<div class="bar"><span style="width:${busy}%;background:${color(busy)}"></span></div>` : ''}
+        ${open && sessions.length ? `<ul>${sessions.map(([s, e, n]) => `<li>🧗 ${s}–${e} ${esc(n)}</li>`).join('')}</ul>` : ''}
+        <div class="links"><a href="${gym.timetable}" target="_blank" rel="noopener">Órarend</a><a href="${gym.maps}" target="_blank" rel="noopener">Térkép</a></div>
+      </li>`).join('');
+  }
+
+  daySel.onchange = hourSel.onchange = render;
+  render();
+</script>
+</body>
+</html>
