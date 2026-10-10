@@ -54,8 +54,8 @@
   DAYS.forEach((name, d) => daySel.add(new Option(name, d)));
   for (let h = minH; h <= maxH; h++) hourSel.add(new Option(`${pad(h)}–${pad(h + 1)}`, h));
 
-  const next = new Date(Date.now() + 3600e3);
-  let day = (next.getDay() + 6) % 7, hour = next.getHours();
+  const now = new Date();
+  let day = (now.getDay() + 6) % 7, hour = now.getHours();
   if (hour > maxH) { day = (day + 1) % 7; hour = minH; }
   daySel.value = day;
   hourSel.value = Math.max(hour, minH);
